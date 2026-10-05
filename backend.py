@@ -421,7 +421,6 @@ User request:
 {query}
 """
 
-
 def supervisor_agent(
     state: TravelState,
 ):
@@ -430,8 +429,13 @@ def supervisor_agent(
 
     try:
 
-        prompt = SUPERVISOR_PROMPT.format(
-            query=query
+        # Use replace() instead of .format()
+        # because SUPERVISOR_PROMPT contains JSON
+        # curly braces that must not be interpreted
+        # as Python format placeholders.
+        prompt = SUPERVISOR_PROMPT.replace(
+            "{query}",
+            query
         )
 
         response = _llm_text(
@@ -552,6 +556,9 @@ def supervisor_agent(
             state.get("llm_calls", 0) + 1
         ),
     }
+
+
+
 
 
 # =========================================================
