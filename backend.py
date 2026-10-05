@@ -1,4 +1,3 @@
-
 import os
 import certifi
 from dotenv import load_dotenv
@@ -84,16 +83,26 @@ from mcp_flight import (
 # =========================================================
 
 def get_database_url():
-    database_url = os.getenv("DATABASE_URL")
+
+    database_url = os.getenv(
+        "DATABASE_URL"
+    )
 
     if not database_url:
+
         raise ValueError(
             "DATABASE_URL is missing. "
             "Please add your Render PostgreSQL External Database URL to .env"
         )
 
     if "sslmode=" not in database_url:
-        separator = "&" if "?" in database_url else "?"
+
+        separator = (
+            "&"
+            if "?" in database_url
+            else "?"
+        )
+
         database_url = (
             f"{database_url}{separator}sslmode=require"
         )
@@ -105,9 +114,12 @@ def get_database_url():
 # GROQ
 # =========================================================
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_API_KEY = os.getenv(
+    "GROQ_API_KEY"
+)
 
 if not GROQ_API_KEY:
+
     raise ValueError(
         "GROQ_API_KEY is missing. "
         "Please add it to your .env file."
@@ -201,7 +213,9 @@ def _llm_text(
         ]
     )
 
-    return str(response.content)
+    return str(
+        response.content
+    )
 
 
 def _json_from_llm(
@@ -216,6 +230,7 @@ def _json_from_llm(
         or end == -1
         or end < start
     ):
+
         raise ValueError(
             "The model did not return a JSON object."
         )
@@ -251,14 +266,34 @@ Determine whether the user's request is:
 2. Safe to process
 3. Not asking for harmful or clearly unrelated content
 
-Return ONLY JSON:
+Valid travel requests can include:
+
+- destinations
+- flights
+- hotels
+- weather
+- budgets
+- visas
+- transportation
+- sightseeing
+- food
+- packing
+- itineraries
+
+Block clearly unrelated requests and requests asking
+for harmful or illegal instructions.
+
+Do not block a valid travel request merely because
+some travel details are missing.
+
+Return ONLY valid JSON:
 
 {
     "allowed": true,
     "reason": "short explanation"
 }
 
-or
+or:
 
 {
     "allowed": false,
@@ -268,70 +303,6 @@ or
 User request:
 {query}
 """
-
-
-def guardrail_agent(
-    state: TravelState,
-):
-
-    query = state["user_query"]
-
-    try:
-
-        prompt = GUARDRAIL_PROMPT.format(
-            query=query
-        )
-
-        response = _llm_text(
-            "You are a strict but practical travel application guardrail.",
-            prompt,
-        )
-
-        data = _json_from_llm(
-            response
-        )
-
-        allowed = bool(
-            data.get(
-                "allowed",
-                True
-            )
-        )
-
-        reason = str(
-            data.get(
-                "reason",
-                ""
-            )
-        )
-
-    except Exception as exc:
-
-        print(
-            "GUARDRAIL ERROR:",
-            type(exc).__name__,
-            exc,
-            flush=True,
-        )
-
-        # Fail open for normal travel requests.
-        allowed = True
-        reason = (
-            "Guardrail parser fallback."
-        )
-
-    return {
-        "guardrail_allowed": allowed,
-        "guardrail_reason": reason,
-        "messages": [
-            AIMessage(
-                content="Travel request checked."
-            )
-        ],
-        "llm_calls": (
-            state.get("llm_calls", 0) + 1
-        ),
-    }
 
 
 # =========================================================
@@ -354,6 +325,7 @@ def guardrail_blocked_agent(
             "and itineraries.\n\n"
             f"Request not processed: {reason}"
         ),
+
         "messages": [
             AIMessage(
                 content=(
@@ -421,21 +393,141 @@ User request:
 {query}
 """
 
+
 def supervisor_agent(
     state: TravelState,
 ):
 
     query = state["user_query"]
 
-    try:
+    llm_calls = state.get(
+        "llm_calls",
+        0
+    )
 
-        # Use replace() instead of .format()
-        # because SUPERVISOR_PROMPT contains JSON
-        # curly braces that must not be interpreted
-        # as Python format placeholders.
-        prompt = SUPERVISOR_PROMPT.replace(
+    # =====================================================
+    # GUARDRAIL CHECK
+    # =====================================================
+
+    guardrail_prompt = (
+        GUARDRAIL_PROMPT.replace(
             "{query}",
             query
+        )
+    )
+
+    try:
+
+        guardrail_response = _llm_text(
+            (
+                "You are a strict but practical "
+                "travel application guardrail."
+            ),
+            guardrail_prompt,
+        )
+
+        guardrail_data = _json_from_llm(
+            guardrail_response
+        )
+
+        allowed = bool(
+            guardrail_data.get(
+                "allowed",
+                True
+            )
+        )
+
+        guardrail_reason = str(
+            guardrail_data.get(
+                "reason",
+                ""
+            )
+        ).strip()
+
+        llm_calls += 1
+
+    except Exception as exc:
+
+        print(
+            "GUARDRAIL ERROR:",
+            type(exc).__name__,
+            exc,
+            flush=True,
+        )
+
+        # Fail open so a temporary guardrail
+        # failure does not crash the travel workflow.
+        allowed = True
+
+        guardrail_reason = (
+            "Guardrail validation fallback allowed the request."
+        )
+
+    # =====================================================
+    # BLOCK INVALID / UNSAFE REQUEST
+    # =====================================================
+
+    if not allowed:
+
+        reason = (
+            guardrail_reason
+            or
+            "This request is outside the scope "
+            "of the travel planning application."
+        )
+
+        return {
+
+            "guardrail_allowed":
+                False,
+
+            "guardrail_reason":
+                reason,
+
+            "selected_agents":
+                [],
+
+            "trip_constraints":
+                _empty_constraints(),
+
+            "supervisor_reasoning":
+                reason,
+
+            "final_response":
+                (
+                    "I can help with travel planning, "
+                    "flights, hotels, weather, budgets, "
+                    "and itineraries.\n\n"
+                    f"Request not processed: {reason}"
+                ),
+
+            "messages": [
+                AIMessage(
+                    content=(
+                        f"Guardrail blocked request: "
+                        f"{reason}"
+                    )
+                )
+            ],
+
+            "llm_calls":
+                llm_calls,
+        }
+
+    # =====================================================
+    # SUPERVISOR ROUTING
+    # =====================================================
+
+    try:
+
+        # Use replace() instead of format()
+        # because SUPERVISOR_PROMPT contains JSON
+        # curly braces.
+        prompt = (
+            SUPERVISOR_PROMPT.replace(
+                "{query}",
+                query
+            )
         )
 
         response = _llm_text(
@@ -459,6 +551,7 @@ def supervisor_agent(
             selected_agents,
             list
         ):
+
             selected_agents = []
 
         selected_agents = [
@@ -467,7 +560,9 @@ def supervisor_agent(
             if agent in KNOWN_AGENTS
         ]
 
+        # Itinerary is always required.
         if "itinerary_agent" not in selected_agents:
+
             selected_agents.append(
                 "itinerary_agent"
             )
@@ -481,6 +576,7 @@ def supervisor_agent(
             constraints,
             dict
         ):
+
             constraints = {}
 
         clean_constraints = (
@@ -499,6 +595,7 @@ def supervisor_agent(
                         value,
                         list
                     ):
+
                         clean_constraints[key] = value
 
                 else:
@@ -512,7 +609,9 @@ def supervisor_agent(
                 "reasoning",
                 ""
             )
-        )
+        ).strip()
+
+        llm_calls += 1
 
     except Exception as exc:
 
@@ -525,10 +624,15 @@ def supervisor_agent(
 
         # Safe fallback.
         selected_agents = [
+
             "flight_agent",
+
             "hotel_agent",
+
             "weather_agent",
+
             "budget_agent",
+
             "itinerary_agent",
         ]
 
@@ -542,23 +646,35 @@ def supervisor_agent(
         )
 
     return {
-        "selected_agents": selected_agents,
-        "trip_constraints": clean_constraints,
-        "supervisor_reasoning": reasoning,
+
+        "guardrail_allowed":
+            True,
+
+        "guardrail_reason":
+            guardrail_reason,
+
+        "selected_agents":
+            selected_agents,
+
+        "trip_constraints":
+            clean_constraints,
+
+        "supervisor_reasoning":
+            reasoning,
+
         "messages": [
             AIMessage(
                 content=(
-                    "Travel specialists selected."
+                    "Travel request passed the "
+                    "guardrail and specialists "
+                    "were selected."
                 )
             )
         ],
-        "llm_calls": (
-            state.get("llm_calls", 0) + 1
-        ),
+
+        "llm_calls":
+            llm_calls,
     }
-
-
-
 
 
 # =========================================================
@@ -615,14 +731,22 @@ def _aviation_data_is_unavailable(
     data
 ) -> bool:
 
-    text = str(data).lower()
+    text = str(
+        data
+    ).lower()
 
     unavailable_markers = [
+
         "function_access_restricted",
+
         "api_error",
+
         "subscription plan",
+
         "not support this api function",
+
         '"ok": false',
+
         "'ok': false",
     ]
 
@@ -678,7 +802,8 @@ def flight_agent(
             _aviation_data_is_unavailable(
                 airports
             )
-            or _aviation_data_is_unavailable(
+            or
+            _aviation_data_is_unavailable(
                 airlines
             )
         ):
@@ -742,7 +867,10 @@ def flight_agent(
         )
 
     return {
-        "flight_results": flight_data,
+
+        "flight_results":
+            flight_data,
+
         "messages": [
             AIMessage(
                 content=(
@@ -750,9 +878,12 @@ def flight_agent(
                 )
             )
         ],
-        "llm_calls": (
-            state.get("llm_calls", 0) + 1
-        ),
+
+        "llm_calls":
+            state.get(
+                "llm_calls",
+                0
+            ) + 1,
     }
 
 
@@ -910,9 +1041,13 @@ def hotel_agent(
     if destination:
 
         query_parts = [
+
             f"best hotels and resorts in {destination}",
+
             "hotel accommodation recommendations",
+
             "best areas to stay",
+
             "hotel prices and reviews",
         ]
 
@@ -965,7 +1100,9 @@ def hotel_agent(
 
         hotel_results = (
             _clean_hotel_results_with_llm(
-                str(raw_hotel_results)
+                str(
+                    raw_hotel_results
+                )
             )
         )
 
@@ -985,9 +1122,12 @@ def hotel_agent(
         )
 
     return {
-        "hotel_results": str(
-            hotel_results
-        ),
+
+        "hotel_results":
+            str(
+                hotel_results
+            ),
+
         "messages": [
             AIMessage(
                 content=(
@@ -995,9 +1135,12 @@ def hotel_agent(
                 )
             )
         ],
-        "llm_calls": (
-            state.get("llm_calls", 0) + 1
-        ),
+
+        "llm_calls":
+            state.get(
+                "llm_calls",
+                0
+            ) + 1,
     }
 
 
@@ -1034,11 +1177,13 @@ def weather_agent(
     if not city:
 
         return {
+
             "weather_results": (
                 "Weather information could not be "
                 "determined because the destination "
                 "was not specified."
             ),
+
             "messages": [
                 AIMessage(
                     content=(
@@ -1086,7 +1231,10 @@ def weather_agent(
         )
 
     return {
-        "weather_results": weather_results,
+
+        "weather_results":
+            weather_results,
+
         "messages": [
             AIMessage(
                 content=(
@@ -1151,15 +1299,21 @@ def budget_agent(
     try:
 
         prompt = BUDGET_PROMPT.format(
-            query=state["user_query"],
+
+            query=state[
+                "user_query"
+            ],
+
             constraints=state.get(
                 "trip_constraints",
                 {}
             ),
+
             flight_results=state.get(
                 "flight_results",
                 ""
             ),
+
             hotel_results=state.get(
                 "hotel_results",
                 ""
@@ -1202,7 +1356,10 @@ def budget_agent(
         )
 
     return {
-        "budget_results": budget_results,
+
+        "budget_results":
+            budget_results,
+
         "messages": [
             AIMessage(
                 content=(
@@ -1210,9 +1367,12 @@ def budget_agent(
                 )
             )
         ],
-        "llm_calls": (
-            state.get("llm_calls", 0) + 1
-        ),
+
+        "llm_calls":
+            state.get(
+                "llm_calls",
+                0
+            ) + 1,
     }
 
 
@@ -1399,8 +1559,13 @@ End with:
     )
 
     return {
-        "itinerary": itinerary,
-        "approval_request": approval_request,
+
+        "itinerary":
+            itinerary,
+
+        "approval_request":
+            approval_request,
+
         "messages": [
             AIMessage(
                 content=(
@@ -1409,9 +1574,12 @@ End with:
                 )
             )
         ],
-        "llm_calls": (
-            state.get("llm_calls", 0) + 1
-        ),
+
+        "llm_calls":
+            state.get(
+                "llm_calls",
+                0
+            ) + 1,
     }
 
 
@@ -1462,6 +1630,7 @@ def human_approval_agent(
         review,
         dict
     ):
+
         review = {}
 
     approved = bool(
@@ -1479,8 +1648,13 @@ def human_approval_agent(
     ).strip()
 
     return {
-        "approved": approved,
-        "human_feedback": human_feedback,
+
+        "approved":
+            approved,
+
+        "human_feedback":
+            human_feedback,
+
         "messages": [
             AIMessage(
                 content=(
@@ -1569,9 +1743,15 @@ def final_agent(
         try:
 
             prompt = FINAL_AGENT_PROMPT.format(
-                query=state["user_query"],
+
+                query=state[
+                    "user_query"
+                ],
+
                 itinerary=itinerary,
+
                 approved=approved,
+
                 feedback=feedback,
             )
 
@@ -1609,7 +1789,10 @@ def final_agent(
         final_response = itinerary
 
     return {
-        "final_response": final_response,
+
+        "final_response":
+            final_response,
+
         "messages": [
             AIMessage(
                 content=(
@@ -1617,9 +1800,12 @@ def final_agent(
                 )
             )
         ],
-        "llm_calls": (
-            state.get("llm_calls", 0) + 1
-        ),
+
+        "llm_calls":
+            state.get(
+                "llm_calls",
+                0
+            ) + 1,
     }
 
 
@@ -1738,40 +1924,48 @@ graph.add_node(
     supervisor_agent
 )
 
+
 graph.add_node(
     "guardrail_blocked",
     guardrail_blocked_agent
 )
+
 
 graph.add_node(
     "flight_agent",
     flight_agent
 )
 
+
 graph.add_node(
     "hotel_agent",
     hotel_agent
 )
+
 
 graph.add_node(
     "weather_agent",
     weather_agent
 )
 
+
 graph.add_node(
     "budget_agent",
     budget_agent
 )
+
 
 graph.add_node(
     "itinerary_agent",
     itinerary_agent
 )
 
+
 graph.add_node(
     "human_approval",
     human_approval_agent
 )
+
 
 graph.add_node(
     "final_agent",
@@ -2212,4 +2406,3 @@ def resume_travel_agent(
         result,
         thread_id,
     )
-
