@@ -7,6 +7,14 @@ It takes a user's natural-language travel request and dynamically coordinates sp
 The system also includes **guardrails, persistent conversation state, dynamic agent routing, and human approval** before finalizing the travel plan.
 
 ---
+## 🚀 Live Demo
+
+**Try Rahi-Go:**
+https://rahi-go.onrender.com/
+
+> Note: The live demo is hosted on Render's free tier, so the service may take a few seconds to wake up after inactivity.
+> ---
+
 
 ## 🚀 Key Features
 
