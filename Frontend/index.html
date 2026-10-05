@@ -1,279 +1,133 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>RaaHiGo | AI Travel Assistant</title>
+    <title>Rahi-Go | AI Travel Assistant</title>
 
     <link rel="stylesheet" href="/static/style.css">
+
+    <!-- Markdown renderer -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 
 <body>
 
     <div class="app-container">
 
-        <!-- ================= SIDEBAR ================= -->
+        <!-- ================= HEADER ================= -->
 
-        <aside class="sidebar">
-
-            <div class="brand">
-                <div class="brand-icon">✈</div>
+        <header class="header">
+            <div class="logo-section">
+                <div class="logo-icon">✈</div>
 
                 <div>
-                    <h2>RaaHiGo</h2>
-                    <span>AI Travel Assistant</span>
+                    <h1>Rahi-Go</h1>
+                    <p>Your AI Travel Assistant</p>
                 </div>
             </div>
 
-
-            <nav class="sidebar-nav">
-
-                <a href="#" class="nav-item active">
-                    <span class="nav-icon">⌂</span>
-                    <span>Home</span>
-                </a>
-
-                <a href="#planner" class="nav-item">
-                    <span class="nav-icon">✦</span>
-                    <span>Plan a Trip</span>
-                </a>
-
-                <a href="#results" class="nav-item">
-                    <span class="nav-icon">◫</span>
-                    <span>My Trips</span>
-                </a>
-
-                <a href="#workflow" class="nav-item">
-                    <span class="nav-icon">⚙</span>
-                    <span>How It Works</span>
-                </a>
-
-            </nav>
-
-
-            <div class="sidebar-bottom">
-
-                <div class="ai-status">
-                    <div class="status-dot"></div>
-
-                    <div>
-                        <strong>AI Assistant</strong>
-                        <span>Ready to plan</span>
-                    </div>
-                </div>
-
-                <div class="tech-small">
-                    Powered by LangGraph + Groq
-                </div>
-
+            <div class="header-badge">
+                <span class="status-dot"></span>
+                AI Powered
             </div>
+        </header>
 
-        </aside>
 
-
-        <!-- ================= MAIN CONTENT ================= -->
+        <!-- ================= MAIN ================= -->
 
         <main class="main-content">
 
-            <!-- TOP BAR -->
+            <!-- Hero Section -->
 
-            <header class="topbar">
+            <section class="hero-section">
 
-                <div class="breadcrumb">
-                    <span>RaaHiGo</span>
-                    <span>/</span>
-                    <strong>Travel Planner</strong>
+                <div class="hero-badge">
+                    ✨ Intelligent Travel Planning
                 </div>
 
-                <div class="topbar-badge">
-                    <span class="live-dot"></span>
-                    AI Online
-                </div>
+                <h2>
+                    Plan Your Perfect Trip
+                    <span>with AI</span>
+                </h2>
 
-            </header>
-
-
-            <!-- ================= HERO ================= -->
-
-            <section class="hero">
-
-                <div class="hero-content">
-
-                    <div class="welcome-pill">
-                        ✨ Intelligent travel planning
-                    </div>
-
-                    <h1>
-                        Your journey,
-                        <span>planned by AI.</span>
-                    </h1>
-
-                    <p>
-                        Tell RaaHiGo where you want to go, and let our AI
-                        coordinate flights, hotels and a complete itinerary
-                        for you.
-                    </p>
-
-                    <div class="hero-features">
-
-                        <div>
-                            <span>✈</span>
-                            <p>Flights</p>
-                        </div>
-
-                        <div>
-                            <span>⌂</span>
-                            <p>Hotels</p>
-                        </div>
-
-                        <div>
-                            <span>◷</span>
-                            <p>Itinerary</p>
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                <div class="hero-visual">
-
-                    <div class="cloud cloud-one"></div>
-                    <div class="cloud cloud-two"></div>
-
-                    <div class="sun"></div>
-
-                    <div class="mountain mountain-back"></div>
-                    <div class="mountain mountain-front"></div>
-
-                    <div class="plane">
-                        ✈
-                    </div>
-
-                    <div class="location-card">
-
-                        <div class="location-icon">📍</div>
-
-                        <div>
-                            <span>Next destination</span>
-                            <strong>Your choice</strong>
-                        </div>
-
-                    </div>
-
-                </div>
+                <p>
+                    Tell Rahi-Go where you want to go, and our AI travel
+                    agents will create a personalized travel plan for you.
+                </p>
 
             </section>
 
 
-            <!-- ================= PLANNER ================= -->
+            <!-- ================= INPUT CARD ================= -->
 
-            <section class="planner-section" id="planner">
+            <section class="input-card">
 
-                <div class="section-heading">
+                <div class="input-header">
 
                     <div>
-                        <span class="section-label">START EXPLORING</span>
-
-                        <h2>Where do you want to go?</h2>
+                        <h3>Where do you want to go?</h3>
 
                         <p>
-                            Describe your trip naturally. RaaHiGo will handle
-                            the rest.
+                            Describe your travel plans naturally.
                         </p>
                     </div>
 
-                    <div class="step-badge">
-                        Step 1 of 1
-                    </div>
-
                 </div>
 
 
-                <div class="planner-card">
-
-                    <div class="planner-card-top">
-
-                        <div class="input-title">
-
-                            <div class="input-icon">
-                                ✦
-                            </div>
-
-                            <div>
-                                <strong>Describe your dream trip</strong>
-                                <span>
-                                    Destination, dates, budget, preferences...
-                                </span>
-                            </div>
-
-                        </div>
-
-                        <span class="ai-tag">
-                            AI POWERED
-                        </span>
-
-                    </div>
-
+                <div class="input-wrapper">
 
                     <textarea
                         id="travelInput"
-                        placeholder="Example: Plan a 5-day trip to Goa from Delhi for two people with a budget of ₹40,000. Include flights, hotels and places to visit."
+                        placeholder="Example: Plan a 5-day trip to Goa from Delhi for two people..."
+                        rows="5"
                     ></textarea>
 
-
-                    <div class="example-prompts">
-
-                        <span>Try:</span>
-
-                        <button
-                            type="button"
-                            onclick="setPrompt('Plan a 4-day trip to Goa from Delhi for two people with a budget of ₹30,000.')">
-                            🌴 Goa getaway
-                        </button>
-
-                        <button
-                            type="button"
-                            onclick="setPrompt('Plan a 5-day trip to Manali from Delhi for two people with a budget of ₹35,000.')">
-                            🏔 Manali trip
-                        </button>
-
-                        <button
-                            type="button"
-                            onclick="setPrompt('Plan a 7-day trip to Kerala from Delhi including flights, hotels and sightseeing.')">
-                            🌿 Kerala
-                        </button>
-
-                    </div>
+                </div>
 
 
-                    <div class="planner-bottom">
+                <!-- Example prompts -->
 
-                        <span class="secure-text">
-                            🔒 Your request is processed securely
-                        </span>
+                <div class="example-prompts">
 
-                        <button
-                            id="planButton"
-                            class="plan-button"
-                            onclick="planTrip()">
+                    <span>Try:</span>
 
-                            <span id="buttonText">
-                                Plan My Trip
-                            </span>
+                    <button
+                        type="button"
+                        onclick="setPrompt('Plan a 5-day trip to Goa from Delhi for two people')"
+                    >
+                        🏖️ Goa Trip
+                    </button>
 
-                            <span class="button-arrow">
-                                →
-                            </span>
+                    <button
+                        type="button"
+                        onclick="setPrompt('Plan a 7-day trip to Manali from Delhi for two people')"
+                    >
+                        🏔️ Manali Trip
+                    </button>
 
-                        </button>
-
-                    </div>
+                    <button
+                        type="button"
+                        onclick="setPrompt('Plan a 4-day budget trip to Jaipur from Delhi')"
+                    >
+                        🕌 Jaipur Trip
+                    </button>
 
                 </div>
+
+
+                <!-- Plan Button -->
+
+                <button
+                    id="planButton"
+                    class="plan-button"
+                    onclick="planTrip()"
+                >
+                    <span id="buttonText">Plan My Trip</span>
+                    <span class="button-arrow">→</span>
+                </button>
 
             </section>
 
@@ -282,38 +136,17 @@
 
             <section
                 id="loadingSection"
-                class="loading-section hidden">
+                class="loading-section"
+                style="display: none;"
+            >
 
-                <div class="loading-card">
+                <div class="loading-spinner"></div>
 
-                    <div class="loader"></div>
+                <h3>Planning your trip...</h3>
 
-                    <h3>RaaHiGo is planning your journey...</h3>
-
-                    <p id="loadingText">
-                        Finding the best travel options
-                    </p>
-
-                    <div class="loading-steps">
-
-                        <div class="loading-step active">
-                            <span>1</span>
-                            Understanding your request
-                        </div>
-
-                        <div class="loading-step">
-                            <span>2</span>
-                            Searching travel options
-                        </div>
-
-                        <div class="loading-step">
-                            <span>3</span>
-                            Building your itinerary
-                        </div>
-
-                    </div>
-
-                </div>
+                <p>
+                    Rahi-Go's AI agents are working on your travel plan.
+                </p>
 
             </section>
 
@@ -322,294 +155,374 @@
 
             <section
                 id="results"
-                class="results-section hidden">
+                class="results-section"
+                style="display: none;"
+            >
 
-                <div class="result-header">
+                <div class="results-header">
 
                     <div>
+                        <h2>Your Travel Plan</h2>
 
-                        <span class="section-label">
-                            YOUR PERSONALIZED PLAN
-                        </span>
-
-                        <h2>Your RaaHiGo Journey</h2>
-
+                        <p>
+                            Generated by Rahi-Go's multi-agent AI system.
+                        </p>
                     </div>
 
                     <button
                         class="new-trip-button"
-                        onclick="newTrip()">
-
+                        onclick="newTrip()"
+                    >
                         + New Trip
-
                     </button>
 
                 </div>
 
 
-                <div class="result-grid">
+                <!-- ================= FINAL ANSWER ================= -->
 
-                    <!-- FINAL ANSWER -->
+                <div class="final-answer-card">
 
-                    <div class="result-main">
+                    <div class="card-header">
 
-                        <div class="result-card">
+                        <div class="card-title">
+                            <span class="card-icon">🗺️</span>
 
-                            <div class="result-card-header">
-
-                                <div class="result-title">
-
-                                    <div class="result-icon">
-                                        ✨
-                                    </div>
-
-                                    <div>
-                                        <h3>Travel Plan</h3>
-                                        <span>
-                                            Generated by RaaHiGo AI
-                                        </span>
-                                    </div>
-
-                                </div>
-
-                                <button
-                                    class="copy-button"
-                                    onclick="copyAnswer()">
-
-                                    Copy
-
-                                </button>
-
-                            </div>
-
-
-                            <div
-                                id="finalAnswer"
-                                class="final-answer">
-                            </div>
-
+                            <h3>Recommended Travel Plan</h3>
                         </div>
 
                     </div>
 
+                    <div
+                        id="finalAnswer"
+                        class="final-answer"
+                    ></div>
 
-                    <!-- SIDE INFORMATION -->
-
-                    <div class="result-side">
-
-                        <div class="mini-card">
-
-                            <div class="mini-card-icon">
-                                ✈
-                            </div>
-
-                            <div>
-                                <span>Flights</span>
-
-                                <strong id="flightStatus">
-                                    Available
-                                </strong>
-                            </div>
-
-                        </div>
+                </div>
 
 
-                        <div class="mini-card">
+                <!-- ================= HUMAN REVIEW / HITL ================= -->
 
-                            <div class="mini-card-icon hotel-icon">
-                                ⌂
-                            </div>
+                <div
+                    id="approvalPanel"
+                    class="approval-panel hidden"
+                    style="display: none;"
+                >
 
-                            <div>
-                                <span>Hotels</span>
+                    <div class="approval-header">
 
-                                <strong id="hotelStatus">
-                                    Searched
-                                </strong>
-                            </div>
+                        <span>✋ Human Review</span>
 
-                        </div>
+                    </div>
 
+                    <h3>
+                        Review Your Itinerary
+                    </h3>
 
-                        <div class="mini-card">
+                    <p id="approvalMessage">
+                        Please review the generated itinerary before
+                        continuing.
+                    </p>
 
-                            <div class="mini-card-icon plan-icon">
-                                ◷
-                            </div>
+                    <textarea
+                        id="feedbackInput"
+                        placeholder="Optional: tell Rahi-Go what you want to change..."
+                        rows="4"
+                    ></textarea>
 
-                            <div>
-                                <span>Itinerary</span>
+                    <div class="approval-actions">
 
-                                <strong>
-                                    Generated
-                                </strong>
-                            </div>
+                        <button
+                            id="approveButton"
+                            class="plan-button"
+                            onclick="approveTrip()"
+                        >
+                            ✓ Approve Itinerary
+                        </button>
 
-                        </div>
-
-
-                        <div class="agent-info">
-
-                            <div class="agent-info-header">
-
-                                <span class="pulse"></span>
-
-                                <strong>AI Workflow</strong>
-
-                            </div>
-
-                            <div class="agent-flow">
-
-                                <span>Flight Agent</span>
-                                <b>→</b>
-
-                                <span>Hotel Agent</span>
-                                <b>→</b>
-
-                                <span>Planner</span>
-                                <b>→</b>
-
-                                <span>Final Agent</span>
-
-                            </div>
-
-                        </div>
+                        <button
+                            id="reviseButton"
+                            class="new-trip-button"
+                            onclick="requestRevision()"
+                        >
+                            Request Changes
+                        </button>
 
                     </div>
 
                 </div>
 
 
-                <!-- RAW DATA -->
+                <!-- ================= AGENT STATUS ================= -->
 
-                <details class="technical-details">
+                <div class="agent-status-grid">
 
-                    <summary>
-                        View AI workflow details
-                    </summary>
+                    <!-- Flight -->
 
-                    <div class="technical-content">
+                    <div class="agent-card">
 
-                        <h4>Flight Search Results</h4>
-                        <pre id="flightResults"></pre>
+                        <div class="agent-card-header">
 
-                        <h4>Hotel Search Results</h4>
-                        <pre id="hotelResults"></pre>
+                            <div class="agent-icon">
+                                ✈️
+                            </div>
 
-                        <h4>Generated Itinerary</h4>
-                        <pre id="itineraryResults"></pre>
+                            <div>
+                                <h4>Flights</h4>
 
-                        <div class="llm-count">
-                            LLM calls:
-                            <strong id="llmCalls">0</strong>
+                                <span
+                                    id="flightStatus"
+                                    class="agent-status"
+                                >
+                                    Completed
+                                </span>
+                            </div>
+
+                        </div>
+
+                        <div
+                            id="flightResults"
+                            class="agent-results"
+                        ></div>
+
+                    </div>
+
+
+                    <!-- Hotel -->
+
+                    <div class="agent-card">
+
+                        <div class="agent-card-header">
+
+                            <div class="agent-icon">
+                                🏨
+                            </div>
+
+                            <div>
+                                <h4>Hotels</h4>
+
+                                <span
+                                    id="hotelStatus"
+                                    class="agent-status"
+                                >
+                                    Completed
+                                </span>
+                            </div>
+
+                        </div>
+
+                        <div
+                            id="hotelResults"
+                            class="agent-results"
+                        ></div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ================= ITINERARY ================= -->
+
+                <div class="details-card">
+
+                    <div class="card-header">
+
+                        <div class="card-title">
+
+                            <span class="card-icon">
+                                📅
+                            </span>
+
+                            <h3>Itinerary Details</h3>
+
                         </div>
 
                     </div>
 
-                </details>
+                    <div
+                        id="itineraryResults"
+                        class="detail-content"
+                    ></div>
+
+                </div>
+
+
+                <!-- ================= TECHNICAL DETAILS ================= -->
+
+                <div class="technical-card">
+
+                    <div class="card-header">
+
+                        <div class="card-title">
+
+                            <span class="card-icon">
+                                ⚙️
+                            </span>
+
+                            <h3>Technical Details</h3>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="technical-grid">
+
+                        <div class="technical-item">
+
+                            <span class="technical-label">
+                                LLM Calls
+                            </span>
+
+                            <span
+                                id="llmCalls"
+                                class="technical-value"
+                            >
+                                0
+                            </span>
+
+                        </div>
+
+
+                        <div class="technical-item">
+
+                            <span class="technical-label">
+                                Architecture
+                            </span>
+
+                            <span class="technical-value">
+                                LangGraph Multi-Agent
+                            </span>
+
+                        </div>
+
+
+                        <div class="technical-item">
+
+                            <span class="technical-label">
+                                Search
+                            </span>
+
+                            <span class="technical-value">
+                                Tavily MCP
+                            </span>
+
+                        </div>
+
+
+                        <div class="technical-item">
+
+                            <span class="technical-label">
+                                Persistence
+                            </span>
+
+                            <span class="technical-value">
+                                PostgreSQL
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
 
             </section>
 
 
             <!-- ================= WORKFLOW ================= -->
 
-            <section
-                class="workflow-section"
-                id="workflow">
+            <section class="workflow-section">
 
-                <div class="workflow-heading">
+                <div class="section-title">
 
-                    <span class="section-label">
-                        BEHIND THE JOURNEY
+                    <span class="section-badge">
+                        HOW IT WORKS
                     </span>
 
-                    <h2>How RaaHiGo works</h2>
-
-                    <p>
-                        Multiple AI-powered steps work together to turn
-                        your request into a practical travel plan.
-                    </p>
+                    <h2>
+                        Your Journey with Rahi-Go
+                    </h2>
 
                 </div>
 
 
                 <div class="workflow-grid">
 
-                    <div class="workflow-card">
+                    <div class="workflow-step">
 
                         <div class="workflow-number">
                             01
                         </div>
 
-                        <div class="workflow-icon purple">
-                            ✦
+                        <div class="workflow-icon">
+                            🧠
                         </div>
 
                         <h3>Understand</h3>
 
                         <p>
-                            RaaHiGo understands your destination,
-                            dates, budget and travel preferences.
+                            Supervisor analyzes your travel request
+                            and identifies the required agents.
                         </p>
 
                     </div>
 
 
-                    <div class="workflow-card">
+                    <div class="workflow-step">
 
                         <div class="workflow-number">
                             02
                         </div>
 
-                        <div class="workflow-icon blue">
-                            🔎
+                        <div class="workflow-icon">
+                            🔍
                         </div>
 
                         <h3>Search</h3>
 
                         <p>
-                            Travel tools search for relevant flight
-                            and hotel information.
+                            Specialized agents search for flights,
+                            hotels, weather and travel information.
                         </p>
 
                     </div>
 
 
-                    <div class="workflow-card">
+                    <div class="workflow-step">
 
                         <div class="workflow-number">
                             03
                         </div>
 
-                        <div class="workflow-icon green">
-                            🧭
+                        <div class="workflow-icon">
+                            📋
                         </div>
 
                         <h3>Plan</h3>
 
                         <p>
-                            AI combines the information into a
-                            practical day-by-day itinerary.
+                            AI combines the results into a personalized
+                            itinerary and budget.
                         </p>
 
                     </div>
 
 
-                    <div class="workflow-card">
+                    <div class="workflow-step">
 
                         <div class="workflow-number">
                             04
                         </div>
 
-                        <div class="workflow-icon orange">
-                            ✨
+                        <div class="workflow-icon">
+                            🤝
                         </div>
 
-                        <h3>Deliver</h3>
+                        <h3>Human Review</h3>
 
                         <p>
-                            You receive one clear travel response
-                            with useful recommendations.
+                            You review the itinerary and can approve it
+                            or request changes before finalization.
                         </p>
 
                     </div>
@@ -618,29 +531,29 @@
 
             </section>
 
-
-            <!-- ================= FOOTER ================= -->
-
-            <footer>
-
-                <div class="footer-brand">
-                    <strong>RaaHiGo</strong>
-                    <span>Travel smarter with AI.</span>
-                </div>
-
-                <div class="footer-tech">
-                    LangGraph · Groq · Tavily · PostgreSQL
-                </div>
-
-            </footer>
-
         </main>
+
+
+        <!-- ================= FOOTER ================= -->
+
+        <footer class="footer">
+
+            <p>
+                Rahi-Go • AI Travel Assistant
+            </p>
+
+            <div class="footer-tech">
+                LangGraph · Groq · Tavily · PostgreSQL · MCP
+            </div>
+
+        </footer>
 
     </div>
 
 
+    <!-- ================= JAVASCRIPT ================= -->
+
     <script src="/static/script.js"></script>
 
 </body>
-
 </html>

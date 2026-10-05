@@ -1,62 +1,149 @@
-// =========================================================
-// RAAHIGO - FRONTEND JAVASCRIPT
-// =========================================================
+// ============================================================
+// RAHI-GO FRONTEND JAVASCRIPT
+// ============================================================
+
+// Current LangGraph conversation/thread
+let currentThreadId = null;
 
 
-// =========================================================
-// GET TRAVEL INPUT
-// =========================================================
+// ============================================================
+// GET USER INPUT
+// ============================================================
 
 function getTravelInput() {
-    return document.getElementById("travelInput");
+
+    const input = document.getElementById("travelInput");
+
+    if (!input) {
+        console.error("travelInput element not found.");
+        return "";
+    }
+
+    return input.value.trim();
 }
 
 
-// =========================================================
+// ============================================================
 // SET EXAMPLE PROMPT
-// =========================================================
+// ============================================================
 
-function setPrompt(text) {
+function setPrompt(prompt) {
 
-    const input = getTravelInput();
+    const input = document.getElementById("travelInput");
 
     if (!input) {
-        console.error("travelInput not found.");
         return;
     }
 
-    input.value = text;
+    input.value = prompt;
     input.focus();
 }
 
 
-// =========================================================
+// ============================================================
+// MARKDOWN FORMATTER
+// ============================================================
+
+function formatAnswer(answer) {
+
+    if (!answer) {
+        return "<p>No travel plan was generated.</p>";
+    }
+
+    // marked.js available
+    if (typeof marked !== "undefined") {
+
+        marked.setOptions({
+            breaks: true,
+            gfm: true
+        });
+
+        return marked.parse(String(answer));
+    }
+
+    // Fallback if marked.js fails to load
+    return String(answer)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\n/g, "<br>");
+}
+
+
+// ============================================================
+// FORMAT MCP RESULTS
+// ============================================================
+
+function formatMCPResult(result) {
+
+    if (
+        result === null ||
+        result === undefined ||
+        result === ""
+    ) {
+        return "<p>No information available.</p>";
+    }
+
+
+    // --------------------------------------------------------
+    // MCP may return an object / array instead of a string.
+    // Convert it into readable JSON first.
+    // --------------------------------------------------------
+
+    if (typeof result === "object") {
+
+        try {
+
+            const jsonText =
+                JSON.stringify(
+                    result,
+                    null,
+                    2
+                );
+
+            return formatAnswer(
+                "```json\n" +
+                jsonText +
+                "\n```"
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Unable to format MCP result:",
+                error
+            );
+
+            return "<p>Information received but could not be displayed.</p>";
+        }
+    }
+
+
+    // --------------------------------------------------------
+    // Normal string / Markdown result
+    // --------------------------------------------------------
+
+    return formatAnswer(result);
+}
+
+
+// ============================================================
 // PLAN TRIP
-// =========================================================
+// ============================================================
 
 async function planTrip() {
 
-    console.log("Plan My Trip button clicked.");
-
-    const input = getTravelInput();
-
-    if (!input) {
-        alert("Travel input box not found.");
-        return;
-    }
-
-    const message = input.value.trim();
+    const message = getTravelInput();
 
     if (!message) {
-        alert("Please enter your travel request.");
-        input.focus();
+
+        alert(
+            "Please describe your travel plans first."
+        );
+
         return;
     }
 
-
-    // -----------------------------------------------------
-    // Get UI elements
-    // -----------------------------------------------------
 
     const planButton =
         document.getElementById("planButton");
@@ -67,21 +154,13 @@ async function planTrip() {
     const loadingSection =
         document.getElementById("loadingSection");
 
-    const resultsSection =
+    const results =
         document.getElementById("results");
 
-    const finalAnswer =
-        document.getElementById("finalAnswer");
 
-
-    // -----------------------------------------------------
     // Disable button
-    // -----------------------------------------------------
-
     if (planButton) {
         planButton.disabled = true;
-        planButton.style.opacity = "0.7";
-        planButton.style.cursor = "wait";
     }
 
     if (buttonText) {
@@ -89,90 +168,85 @@ async function planTrip() {
     }
 
 
-    // -----------------------------------------------------
     // Show loading
-    // -----------------------------------------------------
-
     if (loadingSection) {
-        loadingSection.classList.remove("hidden");
         loadingSection.style.display = "block";
     }
 
-    if (resultsSection) {
-        resultsSection.classList.add("hidden");
-        resultsSection.style.display = "none";
+    if (results) {
+        results.style.display = "none";
     }
 
 
     try {
 
-        console.log("Sending request to /api/travel");
-        console.log("User message:", message);
+        console.log(
+            "Sending travel request:",
+            message
+        );
 
 
-        // -------------------------------------------------
-        // CALL FASTAPI
-        // -------------------------------------------------
+        const response = await fetch(
+            "/api/travel",
+            {
+                method: "POST",
 
-        const response = await fetch("/api/travel", {
+                headers: {
+                    "Content-Type": "application/json"
+                },
 
-            method: "POST",
-
-            headers: {
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({
-                message: message
-            })
-        });
-
-
-        console.log("HTTP status:", response.status);
+                body: JSON.stringify({
+                    message: message
+                })
+            }
+        );
 
 
         const data = await response.json();
 
-        console.log("Backend response:", data);
 
+        console.log(
+            "Travel API response:",
+            data
+        );
 
-        // -------------------------------------------------
-        // CHECK BACKEND ERROR
-        // -------------------------------------------------
 
         if (!response.ok || data.success === false) {
 
             throw new Error(
                 data.error ||
-                data.detail ||
-                "Unable to generate your travel plan."
+                "Unable to generate travel plan."
             );
         }
 
 
-        // -------------------------------------------------
-        // HIDE LOADING
-        // -------------------------------------------------
+        // ====================================================
+        // SAVE THREAD ID
+        // ====================================================
 
-        if (loadingSection) {
-            loadingSection.classList.add("hidden");
-            loadingSection.style.display = "none";
-        }
+        currentThreadId = data.thread_id;
+
+        console.log(
+            "Current thread:",
+            currentThreadId
+        );
 
 
-        // -------------------------------------------------
+        // ====================================================
         // SHOW RESULTS
-        // -------------------------------------------------
+        // ====================================================
 
-        if (resultsSection) {
-            resultsSection.classList.remove("hidden");
-            resultsSection.style.display = "block";
+        if (results) {
+            results.style.display = "block";
         }
 
 
-        // -------------------------------------------------
-        // FINAL AI ANSWER
-        // -------------------------------------------------
+        // ====================================================
+        // FINAL ANSWER
+        // ====================================================
+
+        const finalAnswer =
+            document.getElementById("finalAnswer");
 
         if (finalAnswer) {
 
@@ -181,88 +255,60 @@ async function planTrip() {
         }
 
 
-        // -------------------------------------------------
-        // FLIGHT STATUS
-        // -------------------------------------------------
-
-        const flightStatus =
-            document.getElementById("flightStatus");
-
-        if (flightStatus) {
-
-            if (data.flight_results) {
-                flightStatus.textContent = "Available";
-            } else {
-                flightStatus.textContent = "Not available";
-            }
-        }
-
-
-        // -------------------------------------------------
-        // HOTEL STATUS
-        // -------------------------------------------------
-
-        const hotelStatus =
-            document.getElementById("hotelStatus");
-
-        if (hotelStatus) {
-
-            if (data.hotel_results) {
-                hotelStatus.textContent = "Searched";
-            } else {
-                hotelStatus.textContent = "Not available";
-            }
-        }
-
-
-        // -------------------------------------------------
-        // FLIGHT RAW RESULTS
-        // -------------------------------------------------
+        // ====================================================
+        // FLIGHT RESULTS
+        // ====================================================
 
         const flightResults =
             document.getElementById("flightResults");
 
         if (flightResults) {
 
-            flightResults.textContent =
-                data.flight_results ||
-                "No flight information available.";
+            flightResults.innerHTML =
+                formatMCPResult(
+                    data.flight_results ||
+                    "No flight information available."
+                );
         }
 
 
-        // -------------------------------------------------
-        // HOTEL RAW RESULTS
-        // -------------------------------------------------
+        // ====================================================
+        // HOTEL RESULTS
+        // ====================================================
 
         const hotelResults =
             document.getElementById("hotelResults");
 
         if (hotelResults) {
 
-            hotelResults.textContent =
-                data.hotel_results ||
-                "No hotel information available.";
+            hotelResults.innerHTML =
+                formatMCPResult(
+                    data.hotel_results ||
+                    "No hotel information available."
+                );
         }
 
 
-        // -------------------------------------------------
+        // ====================================================
         // ITINERARY
-        // -------------------------------------------------
+        // ====================================================
 
         const itineraryResults =
             document.getElementById("itineraryResults");
 
         if (itineraryResults) {
 
-            itineraryResults.textContent =
-                data.itinerary ||
-                "No itinerary available.";
+            itineraryResults.innerHTML =
+                formatMCPResult(
+                    data.itinerary ||
+                    "No itinerary available."
+                );
         }
 
 
-        // -------------------------------------------------
-        // LLM CALL COUNT
-        // -------------------------------------------------
+        // ====================================================
+        // LLM CALLS
+        // ====================================================
 
         const llmCalls =
             document.getElementById("llmCalls");
@@ -270,36 +316,83 @@ async function planTrip() {
         if (llmCalls) {
 
             llmCalls.textContent =
-                data.llm_calls ?? "0";
+                data.llm_calls ?? 0;
         }
 
 
-        // -------------------------------------------------
-        // SCROLL TO RESULTS
-        // -------------------------------------------------
+        // ====================================================
+        // APPROVAL / HUMAN-IN-THE-LOOP
+        // ====================================================
 
-        if (resultsSection) {
+        const approvalPanel =
+            document.getElementById("approvalPanel");
+
+        const approvalMessage =
+            document.getElementById("approvalMessage");
+
+
+        if (data.requires_approval) {
+
+            console.log(
+                "Human approval required."
+            );
+
+
+            if (approvalPanel) {
+
+                approvalPanel.classList.remove(
+                    "hidden"
+                );
+
+                approvalPanel.style.display =
+                    "block";
+            }
+
+
+            if (approvalMessage) {
+
+                approvalMessage.textContent =
+                    data.approval_request ||
+                    "Please review your itinerary and approve it or request changes.";
+            }
+
+        } else {
+
+            if (approvalPanel) {
+
+                approvalPanel.classList.add(
+                    "hidden"
+                );
+
+                approvalPanel.style.display =
+                    "none";
+            }
+        }
+
+
+        // ====================================================
+        // SCROLL TO RESULTS
+        // ====================================================
+
+        if (results) {
 
             setTimeout(() => {
 
-                resultsSection.scrollIntoView({
+                results.scrollIntoView({
                     behavior: "smooth",
                     block: "start"
                 });
 
-            }, 200);
+            }, 100);
         }
 
 
     } catch (error) {
 
-        console.error("Travel Planner Error:", error);
-
-
-        if (loadingSection) {
-            loadingSection.classList.add("hidden");
-            loadingSection.style.display = "none";
-        }
+        console.error(
+            "Travel planning error:",
+            error
+        );
 
 
         alert(
@@ -307,95 +400,421 @@ async function planTrip() {
             error.message
         );
 
-
     } finally {
 
-        // -------------------------------------------------
-        // ENABLE BUTTON AGAIN
-        // -------------------------------------------------
+        // Hide loading
+        if (loadingSection) {
+            loadingSection.style.display = "none";
+        }
 
+
+        // Enable button
         if (planButton) {
             planButton.disabled = false;
-            planButton.style.opacity = "1";
-            planButton.style.cursor = "pointer";
         }
 
         if (buttonText) {
-            buttonText.textContent = "Plan My Trip";
+            buttonText.textContent =
+                "Plan My Trip";
         }
     }
 }
 
 
-// =========================================================
-// FORMAT AI RESPONSE
-// =========================================================
+// ============================================================
+// HUMAN APPROVAL
+// ============================================================
 
-function formatAnswer(answer) {
+async function handleApproval(
+    approved,
+    feedback = ""
+) {
 
-    if (!answer) {
-        return "No travel plan was generated.";
+    if (!currentThreadId) {
+
+        alert(
+            "Travel session not found. Please start a new trip."
+        );
+
+        return;
     }
 
 
-    let formatted = String(answer);
+    const approvalPanel =
+        document.getElementById("approvalPanel");
+
+    const approveButton =
+        document.getElementById("approveButton");
+
+    const reviseButton =
+        document.getElementById("reviseButton");
 
 
-    // Escape basic HTML characters
-    formatted = formatted
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
+    // Disable buttons while processing
+
+    if (approveButton) {
+        approveButton.disabled = true;
+    }
+
+    if (reviseButton) {
+        reviseButton.disabled = true;
+    }
 
 
-    // Bold markdown
-    formatted = formatted.replace(
-        /\*\*(.*?)\*\*/g,
-        "<strong>$1</strong>"
-    );
+    if (approvalPanel) {
+
+        approvalPanel.style.opacity = "0.6";
+        approvalPanel.style.pointerEvents = "none";
+    }
 
 
-    // Convert line breaks
-    formatted = formatted.replace(
-        /\n/g,
-        "<br>"
-    );
+    try {
+
+        console.log(
+            "Sending human approval:",
+            {
+                thread_id: currentThreadId,
+                approved: approved,
+                feedback: feedback
+            }
+        );
 
 
-    return formatted;
+        const response = await fetch(
+            "/api/travel/approval",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    thread_id:
+                        currentThreadId,
+
+                    approved:
+                        approved,
+
+                    feedback:
+                        feedback
+                })
+            }
+        );
+
+
+        const data =
+            await response.json();
+
+
+        console.log(
+            "Approval API response:",
+            data
+        );
+
+
+        if (
+            !response.ok ||
+            data.success === false
+        ) {
+
+            throw new Error(
+                data.error ||
+                "Unable to process your approval."
+            );
+        }
+
+
+        // ====================================================
+        // UPDATE FINAL ANSWER
+        // ====================================================
+
+        if (data.answer) {
+
+            const finalAnswer =
+                document.getElementById(
+                    "finalAnswer"
+                );
+
+            if (finalAnswer) {
+
+                finalAnswer.innerHTML =
+                    formatAnswer(
+                        data.answer
+                    );
+            }
+        }
+
+
+        // ====================================================
+        // UPDATE ITINERARY
+        // ====================================================
+
+        if (data.itinerary) {
+
+            const itineraryResults =
+                document.getElementById(
+                    "itineraryResults"
+                );
+
+            if (itineraryResults) {
+
+                itineraryResults.innerHTML =
+                    formatMCPResult(
+                        data.itinerary
+                    );
+            }
+        }
+
+
+        // ====================================================
+        // UPDATE FLIGHT RESULTS
+        // ====================================================
+
+        if (data.flight_results) {
+
+            const flightResults =
+                document.getElementById(
+                    "flightResults"
+                );
+
+            if (flightResults) {
+
+                flightResults.innerHTML =
+                    formatMCPResult(
+                        data.flight_results
+                    );
+            }
+        }
+
+
+        // ====================================================
+        // UPDATE HOTEL RESULTS
+        // ====================================================
+
+        if (data.hotel_results) {
+
+            const hotelResults =
+                document.getElementById(
+                    "hotelResults"
+                );
+
+            if (hotelResults) {
+
+                hotelResults.innerHTML =
+                    formatMCPResult(
+                        data.hotel_results
+                    );
+            }
+        }
+
+
+        // ====================================================
+        // UPDATE LLM COUNT
+        // ====================================================
+
+        const llmCalls =
+            document.getElementById(
+                "llmCalls"
+            );
+
+        if (llmCalls) {
+
+            llmCalls.textContent =
+                data.llm_calls ?? 0;
+        }
+
+
+        // ====================================================
+        // CHECK IF APPROVAL IS STILL REQUIRED
+        // ====================================================
+
+        if (data.requires_approval) {
+
+            if (approvalPanel) {
+
+                approvalPanel.style.display =
+                    "block";
+
+                approvalPanel.classList.remove(
+                    "hidden"
+                );
+            }
+
+        } else {
+
+            if (approvalPanel) {
+
+                approvalPanel.classList.add(
+                    "hidden"
+                );
+
+                approvalPanel.style.display =
+                    "none";
+            }
+        }
+
+
+        // ====================================================
+        // SUCCESS MESSAGE
+        // ====================================================
+
+        if (approved) {
+
+            alert(
+                "Trip approved! Your final travel plan is ready."
+            );
+
+        } else {
+
+            alert(
+                "Your feedback has been submitted and the itinerary was revised."
+            );
+        }
+
+
+        // Clear feedback
+        const feedbackInput =
+            document.getElementById(
+                "feedbackInput"
+            );
+
+        if (feedbackInput) {
+            feedbackInput.value = "";
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "Approval error:",
+            error
+        );
+
+
+        alert(
+            "Unable to process your request.\n\n" +
+            error.message
+        );
+
+    } finally {
+
+        if (approveButton) {
+            approveButton.disabled = false;
+        }
+
+        if (reviseButton) {
+            reviseButton.disabled = false;
+        }
+
+        if (approvalPanel) {
+
+            approvalPanel.style.opacity =
+                "1";
+
+            approvalPanel.style.pointerEvents =
+                "auto";
+        }
+    }
 }
 
 
-// =========================================================
+// ============================================================
+// APPROVE TRIP
+// ============================================================
+
+function approveTrip() {
+
+    handleApproval(
+        true,
+        ""
+    );
+}
+
+
+// ============================================================
+// REQUEST REVISION
+// ============================================================
+
+function requestRevision() {
+
+    const feedbackInput =
+        document.getElementById(
+            "feedbackInput"
+        );
+
+
+    const feedback =
+        feedbackInput
+            ? feedbackInput.value.trim()
+            : "";
+
+
+    if (!feedback) {
+
+        alert(
+            "Please tell Rahi-Go what you want to change."
+        );
+
+        if (feedbackInput) {
+            feedbackInput.focus();
+        }
+
+        return;
+    }
+
+
+    handleApproval(
+        false,
+        feedback
+    );
+}
+
+
+// ============================================================
 // NEW TRIP
-// =========================================================
+// ============================================================
 
 function newTrip() {
 
-    const input = getTravelInput();
+    currentThreadId = null;
 
-    const resultsSection =
-        document.getElementById("results");
 
-    const loadingSection =
-        document.getElementById("loadingSection");
+    const input =
+        document.getElementById(
+            "travelInput"
+        );
+
+    const results =
+        document.getElementById(
+            "results"
+        );
+
+    const approvalPanel =
+        document.getElementById(
+            "approvalPanel"
+        );
 
 
     if (input) {
         input.value = "";
-        input.focus();
     }
 
 
-    if (resultsSection) {
-        resultsSection.classList.add("hidden");
-        resultsSection.style.display = "none";
+    if (results) {
+        results.style.display = "none";
     }
 
 
-    if (loadingSection) {
-        loadingSection.classList.add("hidden");
-        loadingSection.style.display = "none";
+    if (approvalPanel) {
+
+        approvalPanel.classList.add(
+            "hidden"
+        );
+
+        approvalPanel.style.display =
+            "none";
     }
 
 
@@ -406,27 +825,36 @@ function newTrip() {
 }
 
 
-// =========================================================
-// COPY ANSWER
-// =========================================================
+// ============================================================
+// COPY FINAL ANSWER
+// ============================================================
 
 async function copyAnswer() {
 
-    const answer =
-        document.getElementById("finalAnswer");
+    const finalAnswer =
+        document.getElementById(
+            "finalAnswer"
+        );
 
-    if (!answer) {
+
+    if (!finalAnswer) {
         return;
     }
+
+
+    const text =
+        finalAnswer.innerText;
 
 
     try {
 
         await navigator.clipboard.writeText(
-            answer.innerText
+            text
         );
 
-        alert("Travel plan copied!");
+        alert(
+            "Travel plan copied to clipboard."
+        );
 
     } catch (error) {
 
@@ -435,22 +863,31 @@ async function copyAnswer() {
             error
         );
 
-        alert("Unable to copy the travel plan.");
+        alert(
+            "Unable to copy the travel plan."
+        );
     }
 }
 
 
-// =========================================================
+// ============================================================
 // CTRL + ENTER
-// =========================================================
+// ============================================================
 
 document.addEventListener(
     "keydown",
     function(event) {
 
+        const input =
+            document.getElementById(
+                "travelInput"
+            );
+
+
         if (
             event.ctrlKey &&
-            event.key === "Enter"
+            event.key === "Enter" &&
+            document.activeElement === input
         ) {
 
             event.preventDefault();
@@ -461,44 +898,20 @@ document.addEventListener(
 );
 
 
-// =========================================================
-// PAGE LOADED
-// =========================================================
+// ============================================================
+// PAGE LOAD
+// ============================================================
 
 document.addEventListener(
     "DOMContentLoaded",
     function() {
 
         console.log(
-            "RaaHiGo frontend loaded successfully."
+            "Rahi-Go frontend loaded successfully."
         );
 
-        const button =
-            document.getElementById("planButton");
-
-        const input =
-            document.getElementById("travelInput");
-
-
-        if (button) {
-            console.log(
-                "Plan button found."
-            );
-        } else {
-            console.error(
-                "Plan button NOT found."
-            );
-        }
-
-
-        if (input) {
-            console.log(
-                "Travel input found."
-            );
-        } else {
-            console.error(
-                "Travel input NOT found."
-            );
-        }
+        console.log(
+            "HITL approval system ready."
+        );
     }
 );
